@@ -1,0 +1,654 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #444;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+#responseMessage {
+    margin-top: 15px;
+    text-align: center;
+    color: #dc3545;
+    font-size: 14px;
+}
+
+/* Стили для dashboard */
+.main-content {
+    margin-left: 0;
+    padding: 20px;
+    width: 100%;
+    height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content.active {
+    margin-left: 250px;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    padding: 10px 0;
+    text-align: center;
+    z-index: 1; /* Чтобы заголовок был поверх списка */
+}
+
+.employee-header {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 90px;
+    font-weight: bold;
+}
+
+.employee-header span {
+    flex: 1;
+    text-align: left;
+}
+
+.employee-header .fio {
+    flex: 2; /* Больше места для ФИО */
+}
+
+.employee-header .rating {
+    text-align: right; /* Рейтинг справа */
+}
+
+#employeesList {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+#employeesList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+}
+
+#employeesList li:hover {
+    background-color: #e9ecef; /* Hover-эффект */
+    transform: translateY(-2px); /* Легкий подъем при наведении */
+}
+
+#employeesList li span {
+    flex: 1;
+    text-align: left;
+}
+
+#employeesList li .fio {
+    flex: 2; /* Больше места для ФИО */
+}
+
+#employeesList li .rating {
+    text-align: right; /* Рейтинг справа */
+    font-weight: bold;
+    color: #ffc107; /* Золотой цвет для рейтинга */
+}
+
+/* Стили для бокового меню */
+.sidebar {
+    width: 250px;
+    background-color: #333;
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    transition: left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.menu-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: -70px;
+    width: 40px;
+    height: 40px;
+    background-color: #333;
+    border-radius: 5px;
+}
+
+.menu-toggle span {
+    width: 100%;
+    height: 3px;
+    background-color: #fff;
+}
+
+.menu {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 15px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.menu li {
+    margin: 15px 0;
+    padding: 0 10px;
+}
+
+.menu li a, .menu li button {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 20px;
+    display: block;
+    background-color: #444;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.menu li a:hover, .menu li button:hover {
+    background-color: #555;
+}
+
+.logout-container {
+    margin-top: auto;
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* Стили для страницы сотрудника */
+.employee-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+    margin: 20px auto;
+}
+
+.employee-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.employee-container p {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Общие стили для форм регистрации и авторизации */
+.login-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+    position: relative;
+    margin-top: 40px; /* Отступ сверху для вкладок */
+    z-index: 2; /* Форма поверх табов */
+}
+
+/* Контейнер для вкладок */
+.tabs-container {
+    position: relative;
+    z-index: 1; /* Вкладки под формой */
+    margin-top: -20px; /* Сдвигаем вкладки вверх */
+}
+
+/* Стили для вкладок */
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.tab-button {
+    padding: 15px 20px;
+    background-color: #444;
+    color: #fff;
+    border: none;
+    border-radius: 5px 5px 0 0; /* Закругление только сверху */
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    position: relative;
+    z-index: 1; /* Вкладки под формой */
+}
+
+.tab-button.active {
+    background-color: #555;
+    transform: translateY(-10px); /* Активная вкладка поднимается выше */
+    z-index: 2; /* Активная вкладка выше */
+    box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.1); /* Тень для эффекта "потянули за ярлык" */
+}
+
+/* Стили для содержимого вкладок */
+.tab-content {
+    display: none;
+    padding-top: 20px; /* Отступ сверху для содержимого */
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Остальные стили */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #444;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+#responseMessage {
+    margin-top: 15px;
+    text-align: center;
+    color: #dc3545;
+    font-size: 14px;
+}
+
+.rating {
+    text-align: left;
+    font-weight: bold;
+    color: #ffc107;
+    font-size: 18px;
+    margin-top: 10px; 
+}
+
+/* Стили для страницы аккаунта */
+.account-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.avatar {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 5px solid #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.edit-avatar {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.edit-avatar:hover {
+    background-color: #0056b3;
+}
+
+.details {
+    width: 100%;
+    text-align: center;
+}
+
+.info-card {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.info-card p {
+    margin: 15px 0;
+    font-size: 18px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-card strong {
+    font-weight: bold;
+    color: #444;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.actions button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.actions button.edit-info {
+    background-color: #007BFF;
+    color: #fff;
+}
+
+.actions button.edit-info:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.actions button.change-password {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.actions button.change-password:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.account-info {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+/* Стили для списка записей */
+.appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.appointment-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.appointment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.appointment-card p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.appointment-card strong {
+    font-weight: bold;
+    color: #444;
+}
+
+.appointment-card .date {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.appointment-card .service {
+    color: #007BFF;
+    font-weight: bold;
+}
+
+.appointment-card .employee {
+    color: #28a745;
+}
+
+.appointment-card .actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.appointment-card .actions button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.appointment-card .actions button.cancel {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.appointment-card .actions button.cancel:hover {
+    background-color: #c82333;
+}
+
+.appointment-card .actions button.edit {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.appointment-card .actions button.edit:hover {
+    background-color: #e0a800;
+}
+
+/* Иконки */
+.icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.custom-notification {
+    position: relative;
+    background: linear-gradient(to right, #00b09b, #96c93d);
+    color: white;
+    padding: 10px 15px; /* Уменьшаем отступы */
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    min-width: 250px; 
+    max-width: 350px; 
+    font-size: 14px; 
+    line-height: 1.4; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: opacity 2s ease-out; /* Плавное исчезновение */
+}
+
+.custom-notification .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 5px; 
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.custom-notification .progress-bar::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #aff3f0;
+    animation: progress 5s linear forwards;
+}
+
+@keyframes progress {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}

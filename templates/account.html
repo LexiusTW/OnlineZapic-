@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой аккаунт</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<body>
+    <!-- Меню -->
+    <nav class="sidebar">
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="menu" id="menu">
+            <li><a href="#" id="myAccount">Мой аккаунт</a></li>
+            <li><a href="#" id="bookAppointment">Записаться на прием</a></li>
+            <li><a href="#" id="myAppointments">Мои записи</a></li>
+        </ul>
+        <!-- Контейнер для кнопки "Выйти" -->
+        <div class="logout-container">
+            <button id="logout">Выйти</button>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <h1 class="sticky-header">Мой аккаунт</h1>
+        <div class="account-info">
+            <div class="avatar">
+                <img src="https://avatars.mds.yandex.net/i?id=c8a4c93a2a458d6c464c5ea847c25e10673760cc-8228018-images-thumbs&ref=rim&n=33&w=250&h=250" alt="Аватарка">
+            </div>
+            <div class="details">
+                <div class="info-card">
+                    <p><span class="icon">👤</span><strong>ФИО:</strong> <span id="accountFIO"></span></p>
+                    <p><span class="icon">👤</span><strong>Логин:</strong> <span id="accountLogin"></span></p>
+                    <p><span class="icon">✉️</span><strong>Email:</strong> <span id="accountEmail"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контейнер для уведомлений -->
+    <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            // Открытие/закрытие меню
+            menuToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('active');
+                mainContent.classList.toggle('active');
+            });
+
+            // Загрузка информации об аккаунте
+            async function loadAccountInfo() {
+                try {
+                    const response = await fetch('https://onlinezapicbek.cloudpub.ru/account', {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Ошибка при загрузке данных');
+                    }
+
+                    const account = await response.json();
+                    document.getElementById('accountFIO').textContent = account.fio;
+                    document.getElementById('accountLogin').textContent = account.login;
+                    document.getElementById('accountEmail').textContent = account.email;
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    showNotification('Не удалось загрузить информацию об аккаунте', 5000);
+                }
+            }
+
+            // Загрузка данных при открытии страницы
+            loadAccountInfo();
+
+            // Обработка кнопки выхода
+            document.getElementById('logout').addEventListener('click', function () {
+                fetch('https://onlinezapicbek.cloudpub.ru/logout', {
+                    method: 'GET',
+                    credentials: 'include',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        document.cookie = "my_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        showNotification('Вы успешно вышли из системы', 5000);
+                        setTimeout(() => {
+                            window.location.href = '/index.html';
+                        }, 5000);
+                    } else {
+                        throw new Error('Ошибка при выходе из системы');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    showNotification('Не удалось выйти из системы', 5000);
+                });
+            });
+
+            // Обработка пунктов меню
+            document.getElementById('bookAppointment').addEventListener('click', function (event) {
+                event.preventDefault();
+                window.location.href = '/dashboard.html';
+            });
+
+            document.getElementById('myAppointments').addEventListener('click', function (event) {
+                event.preventDefault();
+                window.location.href = '/my_reservations.html';
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Подключение к WebSocket
+            const userId = await getUserId();
+            const socket = new WebSocket(`wss://onlinezapicbek.cloudpub.ru/ws/${userId}`);
+                
+            // Обработка входящих сообщений
+            socket.onmessage = function (event) {
+                const message = event.data;
+                showNotification(message); // Показываем уведомление
+            };
+        
+            // Обработка открытия соединения
+            socket.onopen = function () {
+                console.log("WebSocket connection established");
+            };
+        
+            // Обработка закрытия соединения
+            socket.onclose = function () {
+                console.log("WebSocket connection closed");
+            };
+        
+            // Обработка ошибок
+            socket.onerror = function (error) {
+                console.error("WebSocket error:", error);
+            };
+        });
+        
+        function showNotification(message, duration = 5000) {
+            // Воспроизводим звук уведомления
+            const audio = new Audio('/notification.mp3');
+            audio.play().catch(error => console.error("Ошибка воспроизведения звука:", error));
+
+            // Создаем контейнер для уведомления
+            const notification = document.createElement('div');
+            notification.className = 'custom-notification';
+            notification.innerHTML = message.replace(/\n/g, '<br>');
+
+            // Создаем прогресс-бар
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            notification.appendChild(progressBar);
+
+            // Добавляем уведомление в контейнер
+            const container = document.getElementById('notification-container');
+            container.appendChild(notification);
+
+            // Удаляем уведомление после завершения анимации
+            setTimeout(() => {
+                notification.remove();
+            }, duration);
+        }
+
+        // Функция для получения ID пользователя
+        async function getUserId() {
+            try {
+                const response = await fetch('https://onlinezapicbek.cloudpub.ru/account', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке данных');
+                }
+                const user = await response.json();
+                return user.id;
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</body>
+</html>

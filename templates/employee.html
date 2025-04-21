@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница сотрудника</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<body>
+    <!-- Меню -->
+    <nav class="sidebar">
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="menu" id="menu">
+            <li><a href="#" id="myAccount">Мой аккаунт</a></li>
+            <li><a href="#" id="bookAppointment">Записаться на прием</a></li>
+            <li><a href="#" id="myAppointments">Мои записи</a></li>
+        </ul>
+        <!-- Контейнер для кнопки "Выйти" -->
+        <div class="logout-container">
+            <button id="logout">Выйти</button>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <h1 class="sticky-header">Информация о сотруднике</h1>
+        <div class="employee-info">
+            <h2 id="employeeName"></h2>
+            <p id="employeeSpecialty"></p>
+            <p id="employeeRating" class="rating"></p>
+        </div>
+
+        <form id="reservationForm">
+            <div class="form-group">
+                <label for="date">Выберите дату:</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="time">Выберите время:</label>
+                <select id="time" name="time" required>
+                    <option value="10:00">с 10:00 до 11:00</option>
+                    <option value="11:00">с 11:00 до 12:00</option>
+                    <option value="12:00">с 12:00 до 13:00</option>
+                    <option value="13:00">с 13:00 до 14:00</option>
+                    <option value="14:00">с 14:00 до 15:00</option>
+                    <option value="15:00">с 15:00 до 16:00</option>
+                    <option value="16:00">с 16:00 до 17:00</option>
+                    <option value="17:00">с 17:00 до 18:00</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="service">Выберите услугу:</label>
+                <select id="service" name="service" required>
+                    <option value="Консультация">Консультация</option>
+                    <option value="Диагностика">Диагностика</option>
+                    <option value="Лечение">Лечение</option>
+                </select>
+            </div>
+            <button type="submit">Записаться</button>
+        </form>
+        <p id="responseMessage"></p>
+    </div>
+
+    <!-- Контейнер для уведомлений -->
+    <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            // Открытие/закрытие меню
+            menuToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('active');
+                mainContent.classList.toggle('active');
+            });
+
+            // Получаем идентификатор сотрудника из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const employeeId = urlParams.get('id');
+
+            if (employeeId) {
+                loadEmployeeData(employeeId);
+            }
+
+            // Обработка формы записи
+            document.getElementById('reservationForm').addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                const date = document.getElementById('date').value;
+                const time = document.getElementById('time').value;
+                const dateTime = `${date}T${time}:00.00Z`;
+
+                const userId = await getUserId();
+
+                if (!userId) {
+                    showNotification('Не удалось получить идентификатор пользователя. Попробуйте снова.', 5000);
+                    return;
+                }
+
+                const formData = {
+                    date: dateTime,
+                    employee_id: employeeId,
+                    user_id: userId,
+                    service: document.getElementById('service').value
+                };
+
+                try {
+                    const response = await fetch('https://onlinezapicbek.cloudpub.ru/reservations', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        localStorage.setItem('successMessage', 'Запись успешно создана'); // Сохраняем сообщение
+                        window.location.href = '/dashboard.html'; // Переходим на dashboard
+                    } else if (response.status === 409) {
+                        const data = await response.json();
+                        showNotification(data.detail || 'Это время уже занято', 5000);
+                    } else {
+                        const data = await response.json();
+                        throw new Error(data.message || 'Ошибка при создании записи');
+                    }
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    showNotification(error.message, 5000);
+                }
+            });
+
+            // Обработка кнопки выхода
+            document.getElementById('logout').addEventListener('click', function () {
+                document.cookie = "my_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.href = '/auth.html';
+            });
+
+            // Обработка пунктов меню
+            document.getElementById('myAccount').addEventListener('click', function (event) {
+                event.preventDefault();
+                window.location.href = '/account.html';
+            });
+
+            document.getElementById('myAppointments').addEventListener('click', function (event) {
+                event.preventDefault();
+                window.location.href = '/my_reservations.html';
+            });
+        });
+
+        // Загрузка данных о сотруднике
+        async function loadEmployeeData(employeeId) {
+            try {
+                const response = await fetch(`https://onlinezapicbek.cloudpub.ru/employee/${employeeId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке данных');
+                }
+
+                const employee = await response.json();
+                document.getElementById('employeeName').textContent = employee.fio;
+                document.getElementById('employeeSpecialty').textContent = `Специальность: ${employee.post}`;
+                document.getElementById('employeeRating').textContent = `Рейтинг: ${employee.rating || '0'}/10 ⭐`;
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showNotification('Не удалось загрузить данные сотрудника', 5000);
+            }
+        }
+
+        // Функция для получения ID пользователя
+        async function getUserId() {
+            try {
+                const response = await fetch('https://onlinezapicbek.cloudpub.ru/account', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке данных');
+                }
+                const user = await response.json();
+                return user.id;
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Подключение к WebSocket
+            const userId = await getUserId();
+            const socket = new WebSocket(`wss://onlinezapicbek.cloudpub.ru/ws/${userId}`);
+                
+            // Обработка входящих сообщений
+            socket.onmessage = function (event) {
+                const message = event.data;
+                showNotification(message); // Показываем уведомление
+            };
+        
+            // Обработка открытия соединения
+            socket.onopen = function () {
+                console.log("WebSocket connection established");
+            };
+        
+            // Обработка закрытия соединения
+            socket.onclose = function () {
+                console.log("WebSocket connection closed");
+            };
+        
+            // Обработка ошибок
+            socket.onerror = function (error) {
+                console.error("WebSocket error:", error);
+            };
+        });
+        
+        function showNotification(message, duration = 5000) {
+            // Воспроизводим звук уведомления
+            const audio = new Audio('/notification.mp3');
+            audio.play().catch(error => console.error("Ошибка воспроизведения звука:", error));
+
+            // Создаем контейнер для уведомления
+            const notification = document.createElement('div');
+            notification.className = 'custom-notification';
+            notification.innerHTML = message.replace(/\n/g, '<br>');
+
+            // Создаем прогресс-бар
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            notification.appendChild(progressBar);
+
+            // Добавляем уведомление в контейнер
+            const container = document.getElementById('notification-container');
+            container.appendChild(notification);
+
+            // Удаляем уведомление после завершения анимации
+            setTimeout(() => {
+                notification.remove();
+            }, duration);
+        }
+
+        // Функция для получения ID пользователя
+        async function getUserId() {
+            try {
+                const response = await fetch('https://onlinezapicbek.cloudpub.ru/account', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке данных');
+                }
+                const user = await response.json();
+                return user.id;
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</body>
+</html>
